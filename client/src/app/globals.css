@@ -1,0 +1,49 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Russo+One&display=swap');
+
+:root {
+  --primary-color: #8B5CF6;     
+  --primary-hover: #7C3AED;
+  --secondary-color: #4F46E5;    
+  --accent-color: #F43F5E;      
+  --background-dark: #0F172A;   
+  --background-card: #1E293B;    
+  --background-hover: #334155;
+  --text-primary: #F8FAFC;
+  --text-secondary: #CBD5E1;
+  --success-color: #10B981;
+  --error-color: #EF4444;
+  
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.2);
+  --shadow-glow: 0 0 15px rgba(139, 92, 246, 0.3);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background-color: var(--background-dark);
+  color: var(--text-primary);
+  font-family: 'Poppins', sans-serif;
+  line-height: 1.5;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Russo One', sans-serif;
+  letter-spacing: 0.5px;
+}
+
+button {
+  font-family: 'Poppins', sans-serif;
+  cursor: pointer;
+}
