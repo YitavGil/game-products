@@ -1,5 +1,6 @@
+// src/components/features/Products/ProductList.tsx
 import { useState } from 'react';
-import { Box, Typography, CircularProgress, Alert } from '@mui/material';
+import { Box, Typography, CircularProgress, Alert, useTheme, useMediaQuery } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
@@ -11,13 +12,18 @@ import { Button } from '@/components/common';
 export const ProductList: React.FC = () => {
   const [page, setPage] = useState(1);
   const filters = useSelector((state: RootState) => state.products.filters);
+  const theme = useTheme();
+  
+  // Responsive grid columns
+  const isLargeScreen = useMediaQuery(theme.breakpoints.up('xl'));
+  const isMediumScreen = useMediaQuery(theme.breakpoints.up('md'));
   
   const { 
     data, 
     isLoading, 
     isError, 
     error, 
-    isFetching, 
+    isFetching 
   } = useQuery<PaginatedResponse<Product>, Error>({
     queryKey: ['products', { ...filters, page }],
     queryFn: () => productApi.getProducts({
@@ -28,7 +34,7 @@ export const ProductList: React.FC = () => {
       page,
       limit: 12
     }),
-    staleTime: 1000 * 60,
+    staleTime: 1000 * 60, // 1 minute
     placeholderData: (previousData) => previousData,
     refetchOnWindowFocus: false,
   });
@@ -71,15 +77,22 @@ export const ProductList: React.FC = () => {
     );
   }
   
+  // Determine grid columns based on screen size
+  const getGridColumns = () => {
+    if (isLargeScreen) return 'repeat(4, 1fr)';
+    if (isMediumScreen) return 'repeat(3, 1fr)';
+    return 'repeat(2, 1fr)';
+  };
+  
   return (
     <>
       <Box sx={{ 
         display: 'grid', 
-        gridTemplateColumns: 'repeat(3, 1fr)', 
+        gridTemplateColumns: getGridColumns(), 
         gap: 3
       }}>
         {products.map((product: Product) => (
-          <Box key={product._id} sx={{ width: '100%' }}>
+          <Box key={product._id}>
             <ProductCard product={product} />
           </Box>
         ))}
