@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Providers from './providers';
+import { Stack } from '@mui/material';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import { Inter } from 'next/font/google';
@@ -21,13 +22,13 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <Providers>
-          <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+          <Stack minHeight={'100vh'}>
             <Navbar />
             <main style={{ flex: 1 }}>
               {children}
             </main>
             <Footer />
-          </div>
+          </Stack>
         </Providers>
       </body>
     </html>

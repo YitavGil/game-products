@@ -1,18 +1,24 @@
-// src/components/features/Products/ProductList.tsx
 import { useState } from 'react';
-import { Grid, Box, Typography, Button, CircularProgress, Alert } from '@mui/material';
+import { Box, Typography, CircularProgress, Alert } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
 import { productApi } from '@/lib/api';
 import { ProductCard } from './ProductCard';
-import { Product } from '@/types';
+import { Product, PaginatedResponse } from '@/types';
+import { Button } from '@/components/common';
 
 export const ProductList: React.FC = () => {
   const [page, setPage] = useState(1);
   const filters = useSelector((state: RootState) => state.products.filters);
   
-  const { data, isLoading, isError, error, isPreviousData } = useQuery({
+  const { 
+    data, 
+    isLoading, 
+    isError, 
+    error, 
+    isFetching, 
+  } = useQuery<PaginatedResponse<Product>, Error>({
     queryKey: ['products', { ...filters, page }],
     queryFn: () => productApi.getProducts({
       search: filters.search,
@@ -22,11 +28,13 @@ export const ProductList: React.FC = () => {
       page,
       limit: 12
     }),
-    keepPreviousData: true,
+    staleTime: 1000 * 60,
+    placeholderData: (previousData) => previousData,
+    refetchOnWindowFocus: false,
   });
   
   const handleLoadMore = () => {
-    if (data && page < data.totalPages && !isPreviousData) {
+    if (data && page < data.totalPages && !isFetching) {
       setPage((old) => old + 1);
     }
   };
@@ -42,7 +50,7 @@ export const ProductList: React.FC = () => {
   if (isError) {
     return (
       <Alert severity="error" sx={{ my: 2 }}>
-        Error loading products: {(error as Error).message}
+        Error loading products: {error.message}
       </Alert>
     );
   }
@@ -80,13 +88,13 @@ export const ProductList: React.FC = () => {
       {hasMore && (
         <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
           <Button 
-            variant="contained" 
-            color="primary" 
+            variant="primary" 
             onClick={handleLoadMore}
-            disabled={isLoading}
+            loading={isFetching}
+            disabled={isFetching}
             sx={{ minWidth: 200 }}
           >
-            {isLoading ? <CircularProgress size={24} /> : 'Load More'}
+            Load More
           </Button>
         </Box>
       )}
