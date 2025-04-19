@@ -2,7 +2,6 @@
 import React, { useState } from 'react';
 import { 
   Box, 
-  Button, 
   Popover,
   Typography, 
   Divider, 
@@ -10,21 +9,35 @@ import {
   RadioGroup, 
   FormControlLabel, 
   Radio, 
-  Slider, 
-  Chip,
-  Paper
+  Slider
 } from '@mui/material';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import { useDispatch, useSelector } from 'react-redux';
 import { setCategoryFilter, setPriceFilter, clearFilters } from '@/store/features/products/productsSlice';
 import { ProductCategory } from '@/types';
 import { RootState } from '@/store';
+import { Button, Chip } from '@/components/common';
+import { styled } from '@mui/material/styles';
+
+const FilterContent = styled(Box)(({ theme }) => ({
+  padding: theme.spacing(3),
+  width: 320,
+}));
+
+const FilterSection = styled(Box)(({ theme }) => ({
+  marginBottom: theme.spacing(3),
+}));
+
+const PriceRangeDisplay = styled(Box)({
+  display: 'flex',
+  justifyContent: 'space-between',
+  marginTop: 8,
+});
 
 export const ProductFilters: React.FC = () => {
   const dispatch = useDispatch();
   const { category, minPrice, maxPrice } = useSelector((state: RootState) => state.products.filters);
   
-  // For popover
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
   const open = Boolean(anchorEl);
   
@@ -67,25 +80,22 @@ export const ProductFilters: React.FC = () => {
     return count;
   };
   
+  const activeCount = getActiveFiltersCount();
+  
   return (
     <>
       <Button
-        variant={getActiveFiltersCount() > 0 ? "contained" : "outlined"}
-        color="primary"
+        variant={activeCount > 0 ? "primary" : "outlined"}
+        fullWidth
         startIcon={<FilterListIcon />}
         onClick={handleClick}
-        sx={{ 
-          height: '48px', 
-          width: '100%',
-          borderRadius: '8px'
-        }}
+        sx={{ height: '48px' }}
       >
         Filters
-        {getActiveFiltersCount() > 0 && (
+        {activeCount > 0 && (
           <Chip 
-            label={getActiveFiltersCount()} 
+            label={activeCount} 
             size="small" 
-            color="primary"
             sx={{ ml: 1, height: 20, minWidth: 20 }}
           />
         )}
@@ -103,61 +113,54 @@ export const ProductFilters: React.FC = () => {
           vertical: 'top',
           horizontal: 'left',
         }}
-        PaperProps={{
-          sx: {
-            mt: 1,
-            width: 320,
-            p: 3,
-            borderRadius: 2,
-            bgcolor: 'background.paper'
-          }
-        }}
       >
-        <Typography variant="h6" sx={{ mb: 2 }}>Filter Products</Typography>
-        
-        <Box sx={{ mb: 3 }}>
-          <Typography variant="subtitle1" sx={{ mb: 1 }}>Category</Typography>
-          <RadioGroup
-            value={category || 'all'}
-            onChange={handleCategoryChange}
+        <FilterContent>
+          <Typography variant="h6" sx={{ mb: 2 }}>Filter Products</Typography>
+          
+          <FilterSection>
+            <Typography variant="subtitle1" sx={{ mb: 1 }}>Category</Typography>
+            <RadioGroup
+              value={category || 'all'}
+              onChange={handleCategoryChange}
+            >
+              <FormControlLabel value="all" control={<Radio />} label="All Products" />
+              <FormControlLabel value={ProductCategory.GAME} control={<Radio />} label="Games" />
+              <FormControlLabel value={ProductCategory.HARDWARE} control={<Radio />} label="Hardware" />
+              <FormControlLabel value={ProductCategory.MERCHANDISE} control={<Radio />} label="Merchandise" />
+            </RadioGroup>
+          </FilterSection>
+          
+          <Divider sx={{ my: 2 }} />
+          
+          <FilterSection>
+            <Typography variant="subtitle1" gutterBottom>
+              Price Range
+            </Typography>
+            <Slider
+              value={priceRange}
+              onChange={handlePriceChange}
+              onChangeCommitted={handlePriceChangeCommitted}
+              valueLabelDisplay="auto"
+              min={0}
+              max={500}
+              sx={{ mt: 4 }}
+            />
+            <PriceRangeDisplay>
+              <Typography variant="body2">${priceRange[0]}</Typography>
+              <Typography variant="body2">${priceRange[1]}</Typography>
+            </PriceRangeDisplay>
+          </FilterSection>
+          
+          <Button 
+            variant="outlined" 
+            color="secondary" 
+            fullWidth 
+            onClick={handleClearFilters}
+            sx={{ mt: 2 }}
           >
-            <FormControlLabel value="all" control={<Radio />} label="All Products" />
-            <FormControlLabel value={ProductCategory.GAME} control={<Radio />} label="Games" />
-            <FormControlLabel value={ProductCategory.HARDWARE} control={<Radio />} label="Hardware" />
-            <FormControlLabel value={ProductCategory.MERCHANDISE} control={<Radio />} label="Merchandise" />
-          </RadioGroup>
-        </Box>
-        
-        <Divider sx={{ my: 2 }} />
-        
-        <Box sx={{ mb: 3 }}>
-          <Typography variant="subtitle1" gutterBottom>
-            Price Range
-          </Typography>
-          <Slider
-            value={priceRange}
-            onChange={handlePriceChange}
-            onChangeCommitted={handlePriceChangeCommitted}
-            valueLabelDisplay="auto"
-            min={0}
-            max={500}
-            sx={{ mt: 4 }}
-          />
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
-            <Typography variant="body2">${priceRange[0]}</Typography>
-            <Typography variant="body2">${priceRange[1]}</Typography>
-          </Box>
-        </Box>
-        
-        <Button 
-          variant="outlined" 
-          color="secondary" 
-          fullWidth 
-          onClick={handleClearFilters}
-          sx={{ mt: 2 }}
-        >
-          Clear Filters
-        </Button>
+            Clear Filters
+          </Button>
+        </FilterContent>
       </Popover>
     </>
   );

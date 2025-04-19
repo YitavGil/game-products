@@ -1,12 +1,27 @@
-// src/components/features/Products/SearchBar.tsx
 import React, { useState, useEffect } from 'react';
-import { Paper, InputBase, IconButton, alpha } from '@mui/material';
+import { Paper } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
 import { useDispatch, useSelector } from 'react-redux';
 import { setSearchFilter } from '@/store/features/products/productsSlice';
 import { RootState } from '@/store';
 import { useDebounce } from '@/hooks/useDebounce';
+import { TextField } from '@/components/common';
+import { styled } from '@mui/material/styles';
+
+const SearchPaper = styled(Paper)(({ theme }) => ({
+  padding: '2px 4px',
+  display: 'flex',
+  alignItems: 'center',
+  width: '100%',
+  backgroundColor: theme.palette.background.paper,
+  border: '1px solid rgba(255, 255, 255, 0.1)',
+  transition: 'all 0.3s ease',
+  '&:hover, &:focus-within': {
+    backgroundColor: theme.palette.background.paper,
+    boxShadow: `0 0 0 2px ${theme.palette.primary.main}`,
+  },
+}));
 
 export const SearchBar: React.FC = () => {
   const dispatch = useDispatch();
@@ -30,42 +45,23 @@ export const SearchBar: React.FC = () => {
   };
   
   return (
-    <Paper
-      component="form"
-      sx={{
-        p: '2px 4px',
-        display: 'flex',
-        alignItems: 'center',
-        width: '100%',
-        bgcolor: (theme) => alpha(theme.palette.background.paper, 0.6),
-        border: '1px solid rgba(255, 255, 255, 0.1)',
-        transition: 'all 0.3s ease',
-        '&:hover, &:focus-within': {
-          bgcolor: (theme) => alpha(theme.palette.background.paper, 0.8),
-          boxShadow: (theme) => `0 0 0 2px ${theme.palette.primary.main}`,
-        },
-      }}
-      elevation={0}
-    >
-      <IconButton sx={{ p: '10px' }} aria-label="search">
-        <SearchIcon />
-      </IconButton>
-      <InputBase
-        sx={{ ml: 1, flex: 1 }}
+    <SearchPaper elevation={0}>
+      <TextField
         placeholder="Search for products..."
         value={localSearch}
         onChange={handleChange}
-        inputProps={{ 'aria-label': 'search products' }}
+        startIcon={<SearchIcon />}
+        endIcon={localSearch ? <ClearIcon onClick={handleClear} style={{ cursor: 'pointer' }} /> : null}
+        variant="standard"
+        InputProps={{
+          disableUnderline: true,
+        }}
+        sx={{ 
+          '& .MuiInputBase-root': {
+            padding: '10px',
+          },
+        }}
       />
-      {localSearch && (
-        <IconButton 
-          sx={{ p: '10px' }} 
-          aria-label="clear search"
-          onClick={handleClear}
-        >
-          <ClearIcon />
-        </IconButton>
-      )}
-    </Paper>
+    </SearchPaper>
   );
 };
