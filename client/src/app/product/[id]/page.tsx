@@ -585,11 +585,20 @@ export default async function ProductPage({ params }: ProductPageProps) {
                 p: 2,
               }}
             >
-       
+              <Image
+                src={product.imageUrl}
+                alt={product.name}
+                fill
+                style={{
+                  objectFit: 'contain',
+                  padding: '20px',
+                }}
+                priority
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 500px"
+              />
             </Box>
           </Grid>
         </Grid>
-       
       </Paper>
 
       {/* Reviews Section */}
