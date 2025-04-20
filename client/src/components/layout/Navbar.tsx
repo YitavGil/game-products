@@ -1,5 +1,5 @@
 "use client"
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   AppBar, 
   Toolbar, 
@@ -12,133 +12,313 @@ import {
   Badge,
   useMediaQuery,
   useTheme,
-  Container
+  Container,
+  Drawer,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemText,
+  ListItemIcon
 } from '@mui/material';
 import { 
   ShoppingCart as CartIcon, 
   Menu as MenuIcon,
-  Games as GamesIcon
+  SportsEsports as GamesIcon,
+  Hardware as HardwareIcon,
+  Redeem as MerchandiseIcon,
+  Home as HomeIcon,
+  Close as CloseIcon
 } from '@mui/icons-material';
 import Link from 'next/link';
+import { styled, alpha } from '@mui/material/styles';
+import { usePathname } from 'next/navigation';
+
+const StyledAppBar = styled(AppBar)(({ theme }) => ({
+  backgroundColor: 'rgba(11, 17, 32, 0.85)',
+  backdropFilter: 'blur(10px)',
+  borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
+  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)',
+  transition: 'all 0.3s ease',
+}));
+
+const LogoContainer = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: theme.spacing(1),
+}));
+
+const LogoIcon = styled(GamesIcon)(({ theme }) => ({
+  color: theme.palette.primary.main,
+  fontSize: '2rem',
+  filter: 'drop-shadow(0 0 10px rgba(139, 92, 246, 0.5))',
+}));
+
+const LogoText = styled(Typography)(({ theme }) => ({
+  fontFamily: 'Russo One, sans-serif',
+  fontWeight: 700,
+  letterSpacing: '1px',
+  color: theme.palette.text.primary,
+  textDecoration: 'none',
+  background: 'linear-gradient(90deg, #8B5CF6, #C4B5FD)',
+  WebkitBackgroundClip: 'text',
+  WebkitTextFillColor: 'transparent',
+  textShadow: '0 0 20px rgba(139, 92, 246, 0.3)',
+}));
+
+const NavButton = styled(Button)(({ theme, active }: { theme: any, active: boolean }) => ({
+  color: active ? theme.palette.primary.main : theme.palette.text.primary,
+  margin: theme.spacing(0, 1),
+  padding: theme.spacing(1, 2),
+  fontWeight: 600,
+  position: 'relative',
+  overflow: 'hidden',
+  borderRadius: '8px',
+  transition: 'all 0.3s ease',
+  textTransform: 'none',
+  fontSize: '1rem',
+  '&::after': {
+    content: '""',
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    width: active ? '100%' : '0%',
+    height: '3px',
+    backgroundColor: theme.palette.primary.main,
+    transition: 'width 0.3s ease',
+    borderRadius: '10px',
+  },
+  '&:hover': {
+    backgroundColor: alpha(theme.palette.primary.main, 0.08),
+    '&::after': {
+      width: '100%',
+    },
+  },
+}));
+
+const CartButton = styled(IconButton)(({ theme }) => ({
+  backgroundColor: alpha(theme.palette.primary.main, 0.1),
+  color: theme.palette.text.primary,
+  borderRadius: '50%',
+  padding: theme.spacing(1.2),
+  transition: 'all 0.3s ease',
+  '&:hover': {
+    backgroundColor: alpha(theme.palette.primary.main, 0.2),
+    transform: 'scale(1.05)',
+  },
+}));
+
+const CartBadge = styled(Badge)(({ theme }) => ({
+  '& .MuiBadge-badge': {
+    backgroundColor: theme.palette.primary.main,
+    color: 'white',
+    fontWeight: 'bold',
+    boxShadow: '0 0 10px rgba(139, 92, 246, 0.5)',
+  },
+}));
+
+const DrawerHeader = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  padding: theme.spacing(2, 3),
+  borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+}));
+
+const DrawerList = styled(List)(({ theme }) => ({
+  paddingTop: theme.spacing(2),
+}));
+
+const DrawerListItem = styled(ListItem)<{ active?: boolean }>(({ theme, active }) => ({
+  padding: 0,
+  marginBottom: theme.spacing(1),
+  '& .MuiListItemButton-root': {
+    padding: theme.spacing(1.5, 3),
+    borderRadius: '8px',
+    marginLeft: theme.spacing(2),
+    marginRight: theme.spacing(2),
+    backgroundColor: active ? alpha(theme.palette.primary.main, 0.1) : 'transparent',
+    '&:hover': {
+      backgroundColor: alpha(theme.palette.primary.main, 0.05),
+    },
+  },
+  '& .MuiListItemIcon-root': {
+    color: active ? theme.palette.primary.main : theme.palette.text.secondary,
+  },
+  '& .MuiListItemText-primary': {
+    fontWeight: active ? 600 : 500,
+    color: active ? theme.palette.primary.main : theme.palette.text.primary,
+  },
+}));
 
 export default function Navbar() {
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const pathname = usePathname();
+  const [scrolled, setScrolled] = useState(false);
   
-  const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
+  useEffect(() => {
+    const handleScroll = () => {
+      const isScrolled = window.scrollY > 20;
+      if (isScrolled !== scrolled) {
+        setScrolled(isScrolled);
+      }
+    };
+    
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [scrolled]);
 
-  const handleClose = () => {
-    setAnchorEl(null);
+  const handleDrawerToggle = () => {
+    setMobileOpen(!mobileOpen);
   };
+  
+  const isActive = (path: string) => {
+    if (path === '/') {
+      return pathname === '/';
+    }
+    // For category pages, check if URL contains the category
+    return pathname.includes(path);
+  };
+  
+  const drawer = (
+    <>
+      <DrawerHeader>
+        <LogoContainer>
+          <LogoIcon />
+          <LogoText variant="h6">GAME STORE</LogoText>
+        </LogoContainer>
+        <IconButton onClick={handleDrawerToggle} edge="end">
+          <CloseIcon />
+        </IconButton>
+      </DrawerHeader>
+      <DrawerList>
+        <DrawerListItem active={isActive('/')}>
+          <ListItemButton component={Link} href="/" onClick={handleDrawerToggle}>
+            <ListItemIcon>
+              <HomeIcon />
+            </ListItemIcon>
+            <ListItemText primary="Home" />
+          </ListItemButton>
+        </DrawerListItem>
+        <DrawerListItem active={isActive('/?category=game')}>
+          <ListItemButton component={Link} href="/?category=game" onClick={handleDrawerToggle}>
+            <ListItemIcon>
+              <GamesIcon />
+            </ListItemIcon>
+            <ListItemText primary="Games" />
+          </ListItemButton>
+        </DrawerListItem>
+        <DrawerListItem active={isActive('/?category=hardware')}>
+          <ListItemButton component={Link} href="/?category=hardware" onClick={handleDrawerToggle}>
+            <ListItemIcon>
+              <HardwareIcon />
+            </ListItemIcon>
+            <ListItemText primary="Hardware" />
+          </ListItemButton>
+        </DrawerListItem>
+        <DrawerListItem active={isActive('/?category=merchandise')}>
+          <ListItemButton component={Link} href="/?category=merchandise" onClick={handleDrawerToggle}>
+            <ListItemIcon>
+              <MerchandiseIcon />
+            </ListItemIcon>
+            <ListItemText primary="Merchandise" />
+          </ListItemButton>
+        </DrawerListItem>
+      </DrawerList>
+    </>
+  );
 
   return (
-    <AppBar position="static" color="transparent" elevation={0} sx={{ borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
+    <StyledAppBar 
+      position="sticky" 
+      elevation={scrolled ? 4 : 0}
+      sx={{
+        py: scrolled ? 0.5 : 1,
+        transition: 'all 0.3s ease',
+      }}
+    >
       <Container maxWidth="xl">
         <Toolbar disableGutters>
-          <GamesIcon sx={{ display: { xs: 'none', md: 'flex' }, mr: 1, color: 'primary.main' }} />
+          {/* Mobile Menu Icon */}
+          {isMobile && (
+            <IconButton
+              size="large"
+              aria-label="menu"
+              onClick={handleDrawerToggle}
+              color="inherit"
+              edge="start"
+              sx={{ mr: 2 }}
+            >
+              <MenuIcon />
+            </IconButton>
+          )}
           
-          <Typography
-            variant="h6"
-            noWrap
-            component={Link}
-            href="/"
-            sx={{
-              mr: 2,
-              display: { xs: 'none', md: 'flex' },
-              fontFamily: 'Russo One',
-              fontWeight: 700,
-              letterSpacing: '.1rem',
-              color: 'text.primary',
-              textDecoration: 'none',
-            }}
-          >
-            GAME STORE
-          </Typography>
+          {/* Logo */}
+          <LogoContainer>
+            <LogoIcon />
+            <LogoText
+              variant="h6"
+              noWrap
+              component={Link}
+              href="/"
+              sx={{
+                display: { xs: 'flex' },
+                fontSize: { xs: '1.2rem', md: '1.5rem' }
+              }}
+            >
+              GAME STORE
+            </LogoText>
+          </LogoContainer>
 
-          {isMobile ? (
-            <>
-              <Box sx={{ flexGrow: 1, display: { xs: 'flex', md: 'none' } }}>
-                <IconButton
-                  size="large"
-                  aria-label="menu"
-                  aria-controls="menu-appbar"
-                  aria-haspopup="true"
-                  onClick={handleMenu}
-                  color="inherit"
-                >
-                  <MenuIcon />
-                </IconButton>
-                <Menu
-                  id="menu-appbar"
-                  anchorEl={anchorEl}
-                  anchorOrigin={{
-                    vertical: 'bottom',
-                    horizontal: 'left',
-                  }}
-                  keepMounted
-                  transformOrigin={{
-                    vertical: 'top',
-                    horizontal: 'left',
-                  }}
-                  open={Boolean(anchorEl)}
-                  onClose={handleClose}
-                >
-                  <MenuItem onClick={handleClose} component={Link} href="/">Home</MenuItem>
-                  <MenuItem onClick={handleClose} component={Link} href="/?category=game">Games</MenuItem>
-                  <MenuItem onClick={handleClose} component={Link} href="/?category=hardware">Hardware</MenuItem>
-                  <MenuItem onClick={handleClose} component={Link} href="/?category=merchandise">Merchandise</MenuItem>
-                </Menu>
-              </Box>
-              
-              <GamesIcon sx={{ display: { xs: 'flex', md: 'none' }, mr: 1, color: 'primary.main' }} />
-              <Typography
-                variant="h5"
-                noWrap
-                component={Link}
-                href="/"
-                sx={{
-                  mr: 2,
-                  display: { xs: 'flex', md: 'none' },
-                  flexGrow: 1,
-                  fontFamily: 'Russo One',
-                  fontWeight: 700,
-                  letterSpacing: '.1rem',
-                  color: 'inherit',
-                  textDecoration: 'none',
-                }}
-              >
-                GAME STORE
-              </Typography>
-            </>
-          ) : (
-            <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
-              <Button component={Link} href="/" sx={{ my: 2, color: 'text.primary', display: 'block' }}>
+          {/* Desktop Navigation Links */}
+          {!isMobile && (
+            <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center' }}>
+              <NavButton active={isActive('/')} component={Link} href="/">
                 Home
-              </Button>
-              <Button component={Link} href="/?category=game" sx={{ my: 2, color: 'text.primary', display: 'block' }}>
+              </NavButton>
+              <NavButton active={isActive('/?category=game')} component={Link} href="/?category=game">
                 Games
-              </Button>
-              <Button component={Link} href="/?category=hardware" sx={{ my: 2, color: 'text.primary', display: 'block' }}>
+              </NavButton>
+              <NavButton active={isActive('/?category=hardware')} component={Link} href="/?category=hardware">
                 Hardware
-              </Button>
-              <Button component={Link} href="/?category=merchandise" sx={{ my: 2, color: 'text.primary', display: 'block' }}>
+              </NavButton>
+              <NavButton active={isActive('/?category=merchandise')} component={Link} href="/?category=merchandise">
                 Merchandise
-              </Button>
+              </NavButton>
             </Box>
           )}
 
-          <Box sx={{ flexGrow: 0 }}>
-            <IconButton component={Link} href="/cart" color="inherit">
-              <Badge badgeContent={0} color="primary">
+          {/* Shopping Cart */}
+          <Box sx={{ flexGrow: isMobile ? 1 : 0, display: 'flex', justifyContent: 'flex-end' }}>
+            <CartButton component={Link} href="/cart" color="inherit">
+              <CartBadge badgeContent={0} color="primary">
                 <CartIcon />
-              </Badge>
-            </IconButton>
+              </CartBadge>
+            </CartButton>
           </Box>
         </Toolbar>
       </Container>
-    </AppBar>
+      
+      {/* Mobile Drawer */}
+      <Drawer
+        variant="temporary"
+        open={mobileOpen}
+        onClose={handleDrawerToggle}
+        ModalProps={{
+          keepMounted: true,
+        }}
+        sx={{
+          display: { xs: 'block', md: 'none' },
+          '& .MuiDrawer-paper': { 
+            width: 280,
+            backgroundColor: 'rgba(11, 17, 32, 0.98)',
+            backgroundImage: 'linear-gradient(135deg, #0B1120 0%, #1A2236 100%)',
+          },
+        }}
+      >
+        {drawer}
+      </Drawer>
+    </StyledAppBar>
   );
 }
