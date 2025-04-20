@@ -1,15 +1,14 @@
-// src/components/features/Products/ProductList.tsx
 'use client';
 
 import { useState } from 'react';
-import { Box, Typography, CircularProgress, Alert, Grid } from '@mui/material';
+import { Typography, Alert, Box } from '@mui/material';
+import Grid from '@mui/material/Grid';
 import { useQuery } from '@tanstack/react-query';
 import { productApi } from '@/lib/api';
 import { ProductCard } from './ProductCard';
 import { Product, PaginatedResponse } from '@/types';
 import { Button } from '@/components/common';
 import { useRouter, useSearchParams } from 'next/navigation';
-import LoadingSpinner from '@/components/common/Loader/LoadingSpinner';
 
 interface ProductListProps {
   initialProducts: PaginatedResponse<Product>;
@@ -67,7 +66,14 @@ export const ProductList: React.FC<ProductListProps> = ({ initialProducts, curre
   
   if (isError) {
     return (
-      <Alert severity="error" sx={{ my: 2 }}>
+      <Alert 
+        severity="error" 
+        sx={{ 
+          my: 2, 
+          borderRadius: '12px',
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
+        }}
+      >
         Error loading products: {error.message}
       </Alert>
     );
@@ -78,37 +84,79 @@ export const ProductList: React.FC<ProductListProps> = ({ initialProducts, curre
   
   if (products.length === 0) {
     return (
-      <Box sx={{ textAlign: 'center', py: 4 }}>
-        <Typography variant="h5" gutterBottom>
+      <Box sx={{ 
+        textAlign: 'center', 
+        py: 6,
+        px: 3,
+        backgroundColor: 'rgba(26, 34, 54, 0.6)',
+        borderRadius: '16px',
+        border: '1px solid rgba(255, 255, 255, 0.05)',
+        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)'
+      }}>
+        <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold' }}>
           No products found
         </Typography>
-        <Typography variant="body1" color="text.secondary">
+        <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
           Try adjusting your search or filter criteria.
         </Typography>
+        <Button 
+          variant="outlined" 
+          onClick={() => router.push('/')}
+        >
+          Back to all products
+        </Button>
       </Box>
     );
   }
   
   return (
     <>
-      <Grid container spacing={3}>
+      <Grid container spacing={3} sx={{ mb: 4 }}>
         {products.map((product: Product) => (
-          <Grid item xs={12} sm={6} md={4} lg={3} key={product._id}>
-            <ProductCard product={product} />
+          <Grid 
+            item 
+            xs={12} 
+            sm={6} 
+            md={3} 
+            key={product._id}
+            sx={{ 
+              display: 'flex',
+              height: '450px', 
+            }}
+          >
+            <Box sx={{ 
+              width: '100%', 
+              display: 'flex',
+            }}>
+              <ProductCard product={product} />
+            </Box>
           </Grid>
         ))}
       </Grid>
       
       {hasMore && (
-        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          mt: 4, 
+          mb: 3 
+        }}>
           <Button 
-            variant="primary" 
+            variant="primary"
             onClick={handleLoadMore}
             loading={isLoadingMore}
             disabled={isLoadingMore}
-            sx={{ minWidth: 200 }}
+            sx={{ 
+              minWidth: 200,
+              py: 1.5,
+              borderRadius: '12px',
+              boxShadow: '0 4px 20px rgba(139, 92, 246, 0.3)',
+              '&:hover': {
+                boxShadow: '0 6px 25px rgba(139, 92, 246, 0.5)',
+              }
+            }}
           >
-            Load More
+            {isLoadingMore ? 'Loading...' : 'Load More Products'}
           </Button>
         </Box>
       )}
