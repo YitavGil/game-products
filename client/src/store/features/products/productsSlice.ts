@@ -25,7 +25,7 @@ export const productsSlice = createSlice({
   initialState,
   reducers: {
     setSearchFilter: (state, action: PayloadAction<string>) => {
-      state.filters.search = action.payload;
+      state.filters.search = action.payload.toLowerCase();
     },
     setCategoryFilter: (state, action: PayloadAction<ProductCategory | ''>) => {
       state.filters.category = action.payload;

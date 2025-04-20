@@ -1,53 +1,36 @@
-// src/lib/api.ts
-import axios from 'axios';
-import { ProductCategory, PaginatedResponse, Product, Review } from '@/types';
+// Reviews API URL - For client-side fetching only
+const REVIEWS_API_URL = process.env.NEXT_PUBLIC_REVIEWS_API_URL || 'http://localhost:5001/api';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
-
-export const api = axios.create({
-  baseURL: API_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-interface ProductQueryParams {
-  search?: string;
-  category?: ProductCategory;
-  genre?: string;
-  platform?: string;
-  minPrice?: number;
-  maxPrice?: number;
-  sort?: string;
-  page?: number;
-  limit?: number;
-}
-
-export const productApi = {
-  getProducts: async (params: ProductQueryParams = {}): Promise<PaginatedResponse<Product>> => {
-    const response = await api.get('/products', { params });
-    return response.data;
-  },
+// Review-related API calls - these run client-side
+export const getReviews = async (productId: string, page = 1, limit = 5) => {
+  const response = await fetch(
+    `${REVIEWS_API_URL}/reviews/product/${productId}?page=${page}&limit=${limit}`
+  );
   
-  getProductById: async (id: string): Promise<Product> => {
-    const response = await api.get(`/products/${id}`);
-    return response.data.data;
-  },
+  if (!response.ok) {
+    throw new Error('Failed to fetch reviews');
+  }
   
-  getProductsByCategory: async (category: ProductCategory, params: ProductQueryParams = {}): Promise<PaginatedResponse<Product>> => {
-    const response = await api.get(`/products/category/${category}`, { params });
-    return response.data;
-  },
+  return response.json();
 };
 
-export const reviewApi = {
-  getReviewsByProduct: async (productId: string): Promise<PaginatedResponse<Review>> => {
-    const response = await api.get(`/reviews/product/${productId}`);
-    return response.data;
-  },
+export const createReview = async (reviewData: {
+  productId: string;
+  userName: string;
+  rating: number;
+  comment: string;
+}) => {
+  const response = await fetch(`${REVIEWS_API_URL}/reviews`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(reviewData),
+  });
   
-  createReview: async (review: { productId: string; userName: string; rating: number; comment: string }): Promise<Review> => {
-    const response = await api.post('/reviews', review);
-    return response.data.data;
-  },
+  if (!response.ok) {
+    throw new Error('Failed to submit review');
+  }
+  
+  return response.json();
 };

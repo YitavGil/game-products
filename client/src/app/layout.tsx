@@ -1,16 +1,27 @@
 import type { Metadata } from 'next';
-import Providers from './providers';
-import { Stack } from '@mui/material';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
-import { Inter } from 'next/font/google';
-import './globals.css';
+import { Poppins, Russo_One } from 'next/font/google';
+import '../app/globals.css';
 
-const inter = Inter({ subsets: ['latin'] });
+// Font configuration
+const poppins = Poppins({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-poppins',
+  display: 'swap',
+});
+
+const russoOne = Russo_One({
+  subsets: ['latin'],
+  weight: ['400'],
+  variable: '--font-russo',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
-  title: 'Product Catalog',
-  description: 'Browse our catalog of games, hardware, and merchandise',
+  title: 'GameStore - Your Ultimate Gaming Destination',
+  description: 'Shop for the latest games, gaming hardware, and merchandise all in one place.',
 };
 
 export default function RootLayout({
@@ -19,17 +30,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body className={inter.className}>
-        <Providers>
-          <Stack minHeight={'100vh'}>
-            <Navbar />
-            <main style={{ flex: 1 }}>
-              {children}
-            </main>
-            <Footer />
-          </Stack>
-        </Providers>
+    <html lang="en" className={`${poppins.variable} ${russoOne.variable}`}>
+      <body className="min-h-screen flex flex-col">
+        <Navbar />
+        <main className="app flex-grow">
+          <div className="main-content">
+            {children}
+          </div>
+        </main>
+        <Footer />
       </body>
     </html>
   );

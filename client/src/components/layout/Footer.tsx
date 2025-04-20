@@ -1,99 +1,74 @@
-import { Box, Container, Typography, Grid, Link, IconButton } from '@mui/material';
-import TwitterIcon from '@mui/icons-material/Twitter';
-import FacebookIcon from '@mui/icons-material/Facebook';
-import InstagramIcon from '@mui/icons-material/Instagram';
-import GitHubIcon from '@mui/icons-material/GitHub';
+import React from 'react';
+import Link from 'next/link';
+import { ProductCategory } from '@/lib/types';
 
-export default function Footer() {
+const Footer: React.FC = () => {
+  const categories = [
+    { id: ProductCategory.GAME, name: 'Games', path: `/category/${ProductCategory.GAME}` },
+    { id: ProductCategory.HARDWARE, name: 'Hardware', path: `/category/${ProductCategory.HARDWARE}` },
+    { id: ProductCategory.MERCHANDISE, name: 'Merchandise', path: `/category/${ProductCategory.MERCHANDISE}` },
+  ];
+
+  const currentYear = new Date().getFullYear();
+
   return (
-    <Box
-      component="footer"
-      sx={{
-        py: 6,
-        mt: 'auto',
-        backgroundColor: 'background.paper',
-        borderTop: '1px solid rgba(255, 255, 255, 0.1)',
-      }}
-    >
-      <Container maxWidth="lg">
-        <Grid container spacing={4} justifyContent="space-between">
-          <Grid item xs={12} sm={4}>
-            <Typography variant="h6" color="text.primary" gutterBottom>
-              GAME STORE
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              The ultimate destination for gamers, featuring the latest games, hardware, and merchandise.
-            </Typography>
-            <Box sx={{ mt: 2 }}>
-              <IconButton color="primary" aria-label="Twitter">
-                <TwitterIcon />
-              </IconButton>
-              <IconButton color="primary" aria-label="Facebook">
-                <FacebookIcon />
-              </IconButton>
-              <IconButton color="primary" aria-label="Instagram">
-                <InstagramIcon />
-              </IconButton>
-              <IconButton color="primary" aria-label="GitHub">
-                <GitHubIcon />
-              </IconButton>
-            </Box>
-          </Grid>
-          
-          <Grid item xs={6} sm={2}>
-            <Typography variant="h6" color="text.primary" gutterBottom>
-              Shop
-            </Typography>
-            <Link href="/?category=game" color="text.secondary" display="block" variant="body2">
-              Games
+    <footer className="bg-background-card pt-12 pb-8 mt-16">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {/* Logo and description */}
+          <div>
+            <Link href="/" className="flex items-center">
+              <span className="font-display text-2xl text-primary">GameStore</span>
             </Link>
-            <Link href="/?category=hardware" color="text.secondary" display="block" variant="body2">
-              Hardware
-            </Link>
-            <Link href="/?category=merchandise" color="text.secondary" display="block" variant="body2">
-              Merchandise
-            </Link>
-          </Grid>
-          
-          <Grid item xs={6} sm={2}>
-            <Typography variant="h6" color="text.primary" gutterBottom>
-              Support
-            </Typography>
-            <Link href="#" color="text.secondary" display="block" variant="body2">
-              Contact Us
-            </Link>
-            <Link href="#" color="text.secondary" display="block" variant="body2">
-              FAQs
-            </Link>
-            <Link href="#" color="text.secondary" display="block" variant="body2">
-              Shipping
-            </Link>
-          </Grid>
-          
-          <Grid item xs={6} sm={2}>
-            <Typography variant="h6" color="text.primary" gutterBottom>
-              Legal
-            </Typography>
-            <Link href="#" color="text.secondary" display="block" variant="body2">
-              Privacy Policy
-            </Link>
-            <Link href="#" color="text.secondary" display="block" variant="body2">
-              Terms of Service
-            </Link>
-            <Link href="#" color="text.secondary" display="block" variant="body2">
-              Refund Policy
-            </Link>
-          </Grid>
-        </Grid>
-        
-        <Box mt={5}>
-          <Typography variant="body2" color="text.secondary" align="center">
-            {'© '}
-            {new Date().getFullYear()}
-            {' Game Store. All rights reserved.'}
-          </Typography>
-        </Box>
-      </Container>
-    </Box>
+            <p className="mt-4 text-text-secondary text-sm">
+              Your one-stop shop for games, gaming hardware, and merchandise.
+              Discover the latest releases and find the best gaming gear.
+            </p>
+          </div>
+
+          {/* Navigation */}
+          <div>
+            <h3 className="text-lg font-semibold text-text-primary mb-4">Categories</h3>
+            <ul className="space-y-2">
+              {categories.map((category) => (
+                <li key={category.id}>
+                  <Link
+                    href={category.path}
+                    className="text-text-secondary hover:text-primary transition-colors"
+                  >
+                    {category.name}
+                  </Link>
+                </li>
+              ))}
+              <li>
+                <Link
+                  href="/products"
+                  className="text-text-secondary hover:text-primary transition-colors"
+                >
+                  All Products
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Contact */}
+          <div>
+            <h3 className="text-lg font-semibold text-text-primary mb-4">Contact Us</h3>
+            <ul className="space-y-2 text-text-secondary">
+              <li>Email: support@gamestore.com</li>
+              <li>Phone: +1 (555) 123-4567</li>
+              <li>Address: 123 Gaming Street, Pixel City</li>
+            </ul>
+          </div>
+        </div>
+
+        {/* Copyright */}
+        <div className="border-t border-background-hover mt-8 pt-8 text-center text-text-secondary text-sm">
+          <p>© {currentYear} GameStore. All rights reserved.</p>
+        </div>
+      </div>
+    </footer>
   );
-}
+};
+
+export default Footer;

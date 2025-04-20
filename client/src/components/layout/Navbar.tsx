@@ -1,144 +1,136 @@
-"use client"
+'use client';
+
 import React, { useState } from 'react';
-import { 
-  AppBar, 
-  Toolbar, 
-  Typography, 
-  Button, 
-  IconButton, 
-  Box, 
-  Menu, 
-  MenuItem, 
-  Badge,
-  useMediaQuery,
-  useTheme,
-  Container
-} from '@mui/material';
-import { 
-  ShoppingCart as CartIcon, 
-  Menu as MenuIcon,
-  Games as GamesIcon
-} from '@mui/icons-material';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { ProductCategory } from '@/lib/types';
 
-export default function Navbar() {
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+const Navbar: React.FC = () => {
+  const pathname = usePathname();
+  const [menuOpen, setMenuOpen] = useState(false);
   
-  const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
+  const categories = [
+    { id: ProductCategory.GAME, name: 'Games', path: `/category/${ProductCategory.GAME}` },
+    { id: ProductCategory.HARDWARE, name: 'Hardware', path: `/category/${ProductCategory.HARDWARE}` },
+    { id: ProductCategory.MERCHANDISE, name: 'Merchandise', path: `/category/${ProductCategory.MERCHANDISE}` },
+  ];
 
-  const handleClose = () => {
-    setAnchorEl(null);
+  const toggleMenu = () => {
+    setMenuOpen(!menuOpen);
   };
 
   return (
-    <AppBar position="static" color="transparent" elevation={0} sx={{ borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
-      <Container maxWidth="xl">
-        <Toolbar disableGutters>
-          <GamesIcon sx={{ display: { xs: 'none', md: 'flex' }, mr: 1, color: 'primary.main' }} />
+    <nav className="bg-background-card shadow-md">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between h-16">
+          <div className="flex items-center">
+            <Link href="/" className="flex-shrink-0 flex items-center">
+              <span className="font-display text-2xl text-primary">GameStore</span>
+            </Link>
+          </div>
           
-          <Typography
-            variant="h6"
-            noWrap
-            component={Link}
-            href="/"
-            sx={{
-              mr: 2,
-              display: { xs: 'none', md: 'flex' },
-              fontFamily: 'Russo One',
-              fontWeight: 700,
-              letterSpacing: '.1rem',
-              color: 'text.primary',
-              textDecoration: 'none',
-            }}
-          >
-            GAME STORE
-          </Typography>
-
-          {isMobile ? (
-            <>
-              <Box sx={{ flexGrow: 1, display: { xs: 'flex', md: 'none' } }}>
-                <IconButton
-                  size="large"
-                  aria-label="menu"
-                  aria-controls="menu-appbar"
-                  aria-haspopup="true"
-                  onClick={handleMenu}
-                  color="inherit"
-                >
-                  <MenuIcon />
-                </IconButton>
-                <Menu
-                  id="menu-appbar"
-                  anchorEl={anchorEl}
-                  anchorOrigin={{
-                    vertical: 'bottom',
-                    horizontal: 'left',
-                  }}
-                  keepMounted
-                  transformOrigin={{
-                    vertical: 'top',
-                    horizontal: 'left',
-                  }}
-                  open={Boolean(anchorEl)}
-                  onClose={handleClose}
-                >
-                  <MenuItem onClick={handleClose} component={Link} href="/">Home</MenuItem>
-                  <MenuItem onClick={handleClose} component={Link} href="/?category=game">Games</MenuItem>
-                  <MenuItem onClick={handleClose} component={Link} href="/?category=hardware">Hardware</MenuItem>
-                  <MenuItem onClick={handleClose} component={Link} href="/?category=merchandise">Merchandise</MenuItem>
-                </Menu>
-              </Box>
-              
-              <GamesIcon sx={{ display: { xs: 'flex', md: 'none' }, mr: 1, color: 'primary.main' }} />
-              <Typography
-                variant="h5"
-                noWrap
-                component={Link}
-                href="/"
-                sx={{
-                  mr: 2,
-                  display: { xs: 'flex', md: 'none' },
-                  flexGrow: 1,
-                  fontFamily: 'Russo One',
-                  fontWeight: 700,
-                  letterSpacing: '.1rem',
-                  color: 'inherit',
-                  textDecoration: 'none',
-                }}
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex md:items-center md:space-x-8">
+            {categories.map((category) => (
+              <Link
+                key={category.id}
+                href={category.path}
+                className={`px-3 py-2 text-sm font-medium hover:text-primary transition-colors ${
+                  pathname === category.path ? 'text-primary' : 'text-text-secondary'
+                }`}
               >
-                GAME STORE
-              </Typography>
-            </>
-          ) : (
-            <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
-              <Button component={Link} href="/" sx={{ my: 2, color: 'text.primary', display: 'block' }}>
-                Home
-              </Button>
-              <Button component={Link} href="/?category=game" sx={{ my: 2, color: 'text.primary', display: 'block' }}>
-                Games
-              </Button>
-              <Button component={Link} href="/?category=hardware" sx={{ my: 2, color: 'text.primary', display: 'block' }}>
-                Hardware
-              </Button>
-              <Button component={Link} href="/?category=merchandise" sx={{ my: 2, color: 'text.primary', display: 'block' }}>
-                Merchandise
-              </Button>
-            </Box>
-          )}
+                {category.name}
+              </Link>
+            ))}
+            
+            <Link
+              href="/products"
+              className={`px-3 py-2 text-sm font-medium hover:text-primary transition-colors ${
+                pathname === '/products' ? 'text-primary' : 'text-text-secondary'
+              }`}
+            >
+              All Products
+            </Link>
+          </div>
+          
+          {/* Mobile menu button */}
+          <div className="flex items-center md:hidden">
+            <button
+              onClick={toggleMenu}
+              className="inline-flex items-center justify-center p-2 rounded-md text-text-secondary hover:text-primary hover:bg-background-hover focus:outline-none"
+              aria-expanded={menuOpen}
+            >
+              <span className="sr-only">Open main menu</span>
+              {/* Menu icon */}
+              <svg
+                className={`${menuOpen ? 'hidden' : 'block'} h-6 w-6`}
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
+              </svg>
+              {/* Close icon */}
+              <svg
+                className={`${menuOpen ? 'block' : 'hidden'} h-6 w-6`}
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
 
-          <Box sx={{ flexGrow: 0 }}>
-            <IconButton component={Link} href="/cart" color="inherit">
-              <Badge badgeContent={0} color="primary">
-                <CartIcon />
-              </Badge>
-            </IconButton>
-          </Box>
-        </Toolbar>
-      </Container>
-    </AppBar>
+      {/* Mobile menu */}
+      <div className={`${menuOpen ? 'block' : 'hidden'} md:hidden`}>
+        <div className="pt-2 pb-3 space-y-1">
+          {categories.map((category) => (
+            <Link
+              key={category.id}
+              href={category.path}
+              className={`block px-3 py-2 text-base font-medium ${
+                pathname === category.path
+                  ? 'bg-background-hover text-primary'
+                  : 'text-text-secondary hover:bg-background-hover hover:text-primary'
+              }`}
+              onClick={() => setMenuOpen(false)}
+            >
+              {category.name}
+            </Link>
+          ))}
+          
+          <Link
+            href="/products"
+            className={`block px-3 py-2 text-base font-medium ${
+              pathname === '/products'
+                ? 'bg-background-hover text-primary'
+                : 'text-text-secondary hover:bg-background-hover hover:text-primary'
+            }`}
+            onClick={() => setMenuOpen(false)}
+          >
+            All Products
+          </Link>
+        </div>
+      </div>
+    </nav>
   );
-}
+};
+
+export default Navbar;
