@@ -1,3 +1,4 @@
+"use client"
 import React from 'react';
 import { Card as MuiCard, CardProps as MuiCardProps, CardContent, CardMedia, CardActions } from '@mui/material';
 import { styled } from '@mui/material/styles';

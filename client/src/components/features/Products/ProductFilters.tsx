@@ -1,4 +1,6 @@
 // src/components/features/Products/ProductFilters.tsx
+'use client';
+
 import React, { useState } from 'react';
 import { 
   Box, 
@@ -12,12 +14,10 @@ import {
   Slider
 } from '@mui/material';
 import FilterListIcon from '@mui/icons-material/FilterList';
-import { useDispatch, useSelector } from 'react-redux';
-import { setCategoryFilter, setPriceFilter, clearFilters } from '@/store/features/products/productsSlice';
 import { ProductCategory } from '@/types';
-import { RootState } from '@/store';
 import { Button, Chip } from '@/components/common';
 import { styled } from '@mui/material/styles';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 
 const FilterContent = styled(Box)(({ theme }) => ({
   padding: theme.spacing(3),
@@ -34,16 +34,28 @@ const PriceRangeDisplay = styled(Box)({
   marginTop: 8,
 });
 
-export const ProductFilters: React.FC = () => {
-  const dispatch = useDispatch();
-  const { category, minPrice, maxPrice } = useSelector((state: RootState) => state.products.filters);
+interface ProductFiltersProps {
+  initialCategory?: ProductCategory | '';
+  initialMinPrice?: number;
+  initialMaxPrice?: number;
+}
+
+export const ProductFilters: React.FC<ProductFiltersProps> = ({
+  initialCategory = '',
+  initialMinPrice,
+  initialMaxPrice
+}) => {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
   const open = Boolean(anchorEl);
   
+  const [category, setCategory] = useState<ProductCategory | ''>(initialCategory);
   const [priceRange, setPriceRange] = useState<[number, number]>([
-    minPrice !== '' ? minPrice : 0,
-    maxPrice !== '' ? maxPrice : 500
+    initialMinPrice !== undefined ? initialMinPrice : 0,
+    initialMaxPrice !== undefined ? initialMaxPrice : 500
   ]);
   
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -56,27 +68,70 @@ export const ProductFilters: React.FC = () => {
   
   const handleCategoryChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value === 'all' ? '' : (event.target.value as ProductCategory);
-    dispatch(setCategoryFilter(value));
+    setCategory(value);
   };
   
   const handlePriceChange = (_event: Event, newValue: number | number[]) => {
     setPriceRange(newValue as [number, number]);
   };
   
-  const handlePriceChangeCommitted = () => {
-    dispatch(setPriceFilter({ min: priceRange[0], max: priceRange[1] }));
+  const applyFilters = () => {
+    // Create new URLSearchParams object from current
+    const params = new URLSearchParams(searchParams.toString());
+    
+    // Update category
+    if (category) {
+      params.set('category', category);
+    } else {
+      params.delete('category');
+    }
+    
+    // Update price range
+    if (priceRange[0] > 0) {
+      params.set('minPrice', priceRange[0].toString());
+    } else {
+      params.delete('minPrice');
+    }
+    
+    if (priceRange[1] < 500) {
+      params.set('maxPrice', priceRange[1].toString());
+    } else {
+      params.delete('maxPrice');
+    }
+    
+    // Reset page when filters change
+    params.delete('page');
+    
+    // Update URL with new params
+    router.push(`${pathname}?${params.toString()}`);
+    
+    // Close popover
+    handleClose();
   };
   
   const handleClearFilters = () => {
-    dispatch(clearFilters());
+    // Reset local state
+    setCategory('');
     setPriceRange([0, 500]);
+    
+    // Create new URLSearchParams with only search param
+    const params = new URLSearchParams();
+    const searchValue = searchParams.get('search');
+    if (searchValue) {
+      params.set('search', searchValue);
+    }
+    
+    // Update URL with new params
+    router.push(`${pathname}${params.toString() ? `?${params.toString()}` : ''}`);
+    
+    // Close popover
     handleClose();
   };
   
   const getActiveFiltersCount = () => {
     let count = 0;
     if (category) count += 1;
-    if (minPrice !== '' || maxPrice !== '') count += 1;
+    if (priceRange[0] > 0 || priceRange[1] < 500) count += 1;
     return count;
   };
   
@@ -139,7 +194,6 @@ export const ProductFilters: React.FC = () => {
             <Slider
               value={priceRange}
               onChange={handlePriceChange}
-              onChangeCommitted={handlePriceChangeCommitted}
               valueLabelDisplay="auto"
               min={0}
               max={500}
@@ -151,15 +205,23 @@ export const ProductFilters: React.FC = () => {
             </PriceRangeDisplay>
           </FilterSection>
           
-          <Button 
-            variant="outlined" 
-            color="secondary" 
-            fullWidth 
-            onClick={handleClearFilters}
-            sx={{ mt: 2 }}
-          >
-            Clear Filters
-          </Button>
+          <Box sx={{ display: 'flex', gap: 2, mt: 3 }}>
+            <Button 
+              variant="outlined" 
+              color="secondary" 
+              onClick={handleClearFilters}
+              sx={{ flex: 1 }}
+            >
+              Clear
+            </Button>
+            <Button 
+              variant="primary" 
+              onClick={applyFilters}
+              sx={{ flex: 2 }}
+            >
+              Apply Filters
+            </Button>
+          </Box>
         </FilterContent>
       </Popover>
     </>

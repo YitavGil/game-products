@@ -1,13 +1,14 @@
+// src/components/features/Products/SearchBar.tsx
+'use client';
+
 import React, { useState, useEffect } from 'react';
 import { Paper } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
-import { useDispatch, useSelector } from 'react-redux';
-import { setSearchFilter } from '@/store/features/products/productsSlice';
-import { RootState } from '@/store';
 import { useDebounce } from '@/hooks/useDebounce';
 import { TextField } from '@/components/common';
 import { styled } from '@mui/material/styles';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 
 const SearchPaper = styled(Paper)(({ theme }) => ({
   padding: '2px 4px',
@@ -23,18 +24,37 @@ const SearchPaper = styled(Paper)(({ theme }) => ({
   },
 }));
 
-export const SearchBar: React.FC = () => {
-  const dispatch = useDispatch();
-  const searchFilter = useSelector((state: RootState) => state.products.filters.search);
-  const [localSearch, setLocalSearch] = useState(searchFilter);
+interface SearchBarProps {
+  initialSearch?: string;
+}
+
+export const SearchBar: React.FC<SearchBarProps> = ({ initialSearch = '' }) => {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const [localSearch, setLocalSearch] = useState(initialSearch);
   
   const debouncedSearch = useDebounce(localSearch, 500);
   
   useEffect(() => {
-    if (debouncedSearch !== searchFilter) {
-      dispatch(setSearchFilter(debouncedSearch));
+    if (debouncedSearch !== initialSearch) {
+      // Create new URLSearchParams object from current
+      const params = new URLSearchParams(searchParams.toString());
+      
+      // Update or remove search parameter
+      if (debouncedSearch) {
+        params.set('search', debouncedSearch);
+      } else {
+        params.delete('search');
+      }
+      
+      // Reset page when search changes
+      params.delete('page');
+      
+      // Update URL with new params
+      router.push(`${pathname}?${params.toString()}`);
     }
-  }, [debouncedSearch, dispatch, searchFilter]);
+  }, [debouncedSearch, router, pathname, searchParams, initialSearch]);
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setLocalSearch(e.target.value);
