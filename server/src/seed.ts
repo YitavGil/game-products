@@ -196,37 +196,83 @@ const merchandise = [
  */
 const seedDatabase = async () => {
   try {
-    // Connect to MongoDB
-    await mongoose.connect(process.env.MONGO_URI!);
-    console.log('Connected to MongoDB');
+    // Connect to MongoDB - check for both environment variable names
+    const mongoUri = process.env.MONGODB_URI || process.env.MONGO_URI;
+    
+    if (!mongoUri) {
+      throw new Error('MongoDB URI not found in environment variables');
+    }
+    
+    await mongoose.connect(mongoUri);
+    console.log('Connected to MongoDB for seeding');
+
+    // Check if database already has data using Mongoose models
+    const [gamesCount, hardwareCount, merchandiseCount] = await Promise.all([
+      GameModel.countDocuments(),
+      HardwareModel.countDocuments(),
+      MerchandiseModel.countDocuments()
+    ]);
+    
+    const totalProductsCount = gamesCount + hardwareCount + merchandiseCount;
+    
+    if (totalProductsCount > 0) {
+      console.log('Database already has data, skipping seed');
+      
+      // If running as standalone script, disconnect and exit
+      if (require.main === module) {
+        await mongoose.disconnect();
+        console.log('Disconnected from MongoDB');
+        process.exit(0);
+      }
+      
+      return false;
+    }
 
     // Clear existing data
-    await GameModel.deleteMany({});
-    await HardwareModel.deleteMany({});
-    await MerchandiseModel.deleteMany({});
+    await Promise.all([
+      GameModel.deleteMany({}),
+      HardwareModel.deleteMany({}),
+      MerchandiseModel.deleteMany({})
+    ]);
     
     console.log('Existing data cleared');
 
     // Insert new data
-    await GameModel.insertMany(games);
-    await HardwareModel.insertMany(hardware);
-    await MerchandiseModel.insertMany(merchandise);
+    await Promise.all([
+      GameModel.insertMany(games),
+      HardwareModel.insertMany(hardware),
+      MerchandiseModel.insertMany(merchandise)
+    ]);
     
     console.log('Database seeded successfully!');
     console.log(`- ${games.length} games added`);
     console.log(`- ${hardware.length} hardware items added`);
     console.log(`- ${merchandise.length} merchandise items added`);
     
-    // Disconnect from MongoDB
-    await mongoose.disconnect();
-    console.log('Disconnected from MongoDB');
+    // If running as standalone script, disconnect and exit
+    if (require.main === module) {
+      await mongoose.disconnect();
+      console.log('Disconnected from MongoDB');
+      process.exit(0);
+    }
     
-    process.exit(0);
+    return true;
   } catch (error) {
     console.error('Error seeding database:', error);
-    process.exit(1);
+    
+    // If running as standalone script, exit with error
+    if (require.main === module) {
+      process.exit(1);
+    }
+    
+    throw error;
   }
 };
 
-// Run the seed function
-seedDatabase();
+// Only run seed automatically if this file is executed directly
+if (require.main === module) {
+  seedDatabase();
+}
+
+// Export for use in other files
+export default seedDatabase;
