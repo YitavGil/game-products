@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -14,19 +14,32 @@ interface ReviewFormProps {
   onSubmit: (formData: { userName: string; rating: number; comment: string }) => void;
   isPending: boolean;
   formError: string;
+  resetForm: boolean; // New prop to signal when to reset the form
 }
 
 const ReviewForm: React.FC<ReviewFormProps> = ({ 
   productId, 
   onSubmit, 
   isPending, 
-  formError 
+  formError,
+  resetForm 
 }) => {
   const [reviewForm, setReviewForm] = useState({
     userName: '',
     rating: 5,
     comment: ''
   });
+
+  // Reset form when resetForm prop changes to true
+  useEffect(() => {
+    if (resetForm) {
+      setReviewForm({
+        userName: '',
+        rating: 5,
+        comment: ''
+      });
+    }
+  }, [resetForm]);
 
   const handleFormChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
