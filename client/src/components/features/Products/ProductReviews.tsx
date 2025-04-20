@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Paper } from '@mui/material';
+import { Paper, Alert, Snackbar } from '@mui/material';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { reviewApi } from '@/lib/api';
 import { Review } from '@/types';
@@ -15,6 +15,8 @@ interface ProductReviewsProps {
 const ProductReviews: React.FC<ProductReviewsProps> = ({ productId }) => {
   const queryClient = useQueryClient();
   const [formError, setFormError] = useState('');
+  const [shouldResetForm, setShouldResetForm] = useState(false);
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
   const {
     data,
@@ -25,7 +27,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId }) => {
     queryFn: () => reviewApi.getReviewsByProduct(productId),
     retry: 1,
     retryDelay: 1000,
-    onError: (error) => {
+    onError: (error: any) => {
       console.error("Error fetching reviews:", error);
     }
   });
@@ -34,14 +36,35 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId }) => {
     mutationFn: (newReview: { productId: string; userName: string; rating: number; comment: string }) => 
       reviewApi.createReview(newReview),
     onSuccess: () => {
+      // Reset the form and show success message
+      setShouldResetForm(true);
+      setShowSuccessMessage(true);
+      
+      // Refresh the reviews list
       queryClient.invalidateQueries({ queryKey: ['reviews', productId] });
     },
     onError: (err: any) => {
-      setFormError(err.message || 'Failed to submit review');
+      console.error("Review submission error:", err);
+      if (err.response) {
+        // Handle API error response
+        setFormError(err.response.data?.error || 'Failed to submit review. Please try again.');
+      } else if (err.request) {
+        // Handle network error
+        setFormError('Network error. Please check your connection and try again.');
+      } else {
+        // Handle other errors
+        setFormError(err.message || 'Failed to submit review');
+      }
+      
+      // Don't reset form on error
+      setShouldResetForm(false);
     }
   });
 
-  const handleSubmitReview = (formData) => {
+  const handleSubmitReview = (formData: { userName: string; rating: number; comment: string }) => {
+    // Reset the "should reset" flag first (will be set to true on success)
+    setShouldResetForm(false);
+    
     if (!formData.userName.trim()) {
       setFormError('Please enter your name');
       return;
@@ -52,6 +75,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId }) => {
       return;
     }
     
+    // Clear previous errors
     setFormError('');
     
     mutation.mutate({
@@ -60,6 +84,10 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId }) => {
       rating: formData.rating,
       comment: formData.comment.trim()
     });
+  };
+
+  const handleCloseSuccessMessage = () => {
+    setShowSuccessMessage(false);
   };
 
   const reviews = data?.data || [];
@@ -95,6 +123,27 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId }) => {
         overflow: 'hidden',
       }}
     >
+      {/* Success Message */}
+      <Snackbar
+        open={showSuccessMessage}
+        autoHideDuration={6000}
+        onClose={handleCloseSuccessMessage}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert 
+          onClose={handleCloseSuccessMessage} 
+          severity="success" 
+          sx={{ 
+            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+            border: '1px solid rgba(16, 185, 129, 0.2)',
+            color: '#10B981',
+            mt: "50px"
+          }}
+        >
+          Your review has been submitted successfully!
+        </Alert>
+      </Snackbar>
+      
       <DisplayReviews 
         productId={productId}
         isLoading={isLoading}
@@ -107,6 +156,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId }) => {
         onSubmit={handleSubmitReview}
         isPending={mutation.isPending}
         formError={formError}
+        resetForm={shouldResetForm}
       />
     </Paper>
   );

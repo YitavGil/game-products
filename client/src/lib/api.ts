@@ -41,13 +41,25 @@ export const productApi = {
 };
 
 export const reviewApi = {
-  getReviewsByProduct: async (productId: string): Promise<PaginatedResponse<Review>> => {
-    const response = await api.get(`/reviews/product/${productId}`);
-    return response.data;
+  getReviewsByProduct: async (productId: string, page = 1, limit = 10): Promise<PaginatedResponse<Review>> => {
+    try {
+      const response = await api.get(`/reviews/product/${productId}`, {
+        params: { page, limit }
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching reviews:', error);
+      throw error;
+    }
   },
   
-  createReview: async (review: { productId: string; userName: string; rating: number; comment: string }): Promise<Review> => {
-    const response = await api.post('/reviews', review);
-    return response.data.data;
+  createReview: async (reviewData: { productId: string; userName: string; rating: number; comment: string }): Promise<Review> => {
+    try {
+      const response = await api.post('/reviews', reviewData);
+      return response.data.data;
+    } catch (error) {
+      console.error('Error creating review:', error);
+      throw error;
+    }
   },
 };
