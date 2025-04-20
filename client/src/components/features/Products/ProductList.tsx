@@ -1,57 +1,69 @@
 // src/components/features/Products/ProductList.tsx
+'use client';
+
 import { useState } from 'react';
-import { Box, Typography, CircularProgress, Alert, useTheme, useMediaQuery } from '@mui/material';
+import { Box, Typography, CircularProgress, Alert, Grid } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
-import { useSelector } from 'react-redux';
-import { RootState } from '@/store';
 import { productApi } from '@/lib/api';
 import { ProductCard } from './ProductCard';
 import { Product, PaginatedResponse } from '@/types';
 import { Button } from '@/components/common';
+import { useRouter, useSearchParams } from 'next/navigation';
+import LoadingSpinner from '@/components/common/Loader/LoadingSpinner';
 
-export const ProductList: React.FC = () => {
-  const [page, setPage] = useState(1);
-  const filters = useSelector((state: RootState) => state.products.filters);
-  const theme = useTheme();
+interface ProductListProps {
+  initialProducts: PaginatedResponse<Product>;
+  currentPage: number;
+}
+
+export const ProductList: React.FC<ProductListProps> = ({ initialProducts, currentPage }) => {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   
-  // Responsive grid columns
-  const isLargeScreen = useMediaQuery(theme.breakpoints.up('xl'));
-  const isMediumScreen = useMediaQuery(theme.breakpoints.up('md'));
+  // Client-side pagination state
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   
   const { 
-    data, 
-    isLoading, 
+    data = initialProducts, 
     isError, 
-    error, 
-    isFetching 
+    error
   } = useQuery<PaginatedResponse<Product>, Error>({
-    queryKey: ['products', { ...filters, page }],
-    queryFn: () => productApi.getProducts({
-      search: filters.search,
-      category: filters.category,
-      minPrice: filters.minPrice !== '' ? filters.minPrice : undefined,
-      maxPrice: filters.maxPrice !== '' ? filters.maxPrice : undefined,
-      page,
-      limit: 12
-    }),
+    queryKey: ['products', { page: currentPage }],
+    queryFn: () => {
+      // Convert searchParams to object
+      const params: Record<string, string> = {};
+      searchParams.forEach((value, key) => {
+        params[key] = value;
+      });
+      
+      return productApi.getProducts({
+        search: params.search,
+        category: params.category,
+        minPrice: params.minPrice ? parseInt(params.minPrice) : undefined,
+        maxPrice: params.maxPrice ? parseInt(params.maxPrice) : undefined,
+        page: currentPage,
+        limit: 12
+      });
+    },
+    initialData: initialProducts,
     staleTime: 1000 * 60, // 1 minute
-    placeholderData: (previousData) => previousData,
     refetchOnWindowFocus: false,
   });
   
-  const handleLoadMore = () => {
-    if (data && page < data.totalPages && !isFetching) {
-      setPage((old) => old + 1);
+  const handleLoadMore = async () => {
+    if (data && currentPage < data.totalPages && !isLoadingMore) {
+      setIsLoadingMore(true);
+      
+      // Create new URLSearchParams object from current
+      const newParams = new URLSearchParams(searchParams.toString());
+      newParams.set('page', (currentPage + 1).toString());
+      
+      // Navigate to next page
+      router.push(`/?${newParams.toString()}`);
+      
+      setIsLoadingMore(false);
     }
   };
-  
-  if (isLoading && page === 1) {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-        <CircularProgress />
-      </Box>
-    );
-  }
   
   if (isError) {
     return (
@@ -62,7 +74,7 @@ export const ProductList: React.FC = () => {
   }
   
   const products = data?.data || [];
-  const hasMore = data ? page < data.totalPages : false;
+  const hasMore = data ? currentPage < data.totalPages : false;
   
   if (products.length === 0) {
     return (
@@ -77,34 +89,23 @@ export const ProductList: React.FC = () => {
     );
   }
   
-  // Determine grid columns based on screen size
-  const getGridColumns = () => {
-    if (isLargeScreen) return 'repeat(4, 1fr)';
-    if (isMediumScreen) return 'repeat(3, 1fr)';
-    return 'repeat(2, 1fr)';
-  };
-  
   return (
     <>
-      <Box sx={{ 
-        display: 'grid', 
-        gridTemplateColumns: getGridColumns(), 
-        gap: 3
-      }}>
+      <Grid container spacing={3}>
         {products.map((product: Product) => (
-          <Box key={product._id}>
+          <Grid item xs={12} sm={6} md={4} lg={3} key={product._id}>
             <ProductCard product={product} />
-          </Box>
+          </Grid>
         ))}
-      </Box>
+      </Grid>
       
       {hasMore && (
         <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
           <Button 
             variant="primary" 
             onClick={handleLoadMore}
-            loading={isFetching}
-            disabled={isFetching}
+            loading={isLoadingMore}
+            disabled={isLoadingMore}
             sx={{ minWidth: 200 }}
           >
             Load More
