@@ -32,12 +32,25 @@ export const SearchBar: React.FC<SearchBarProps> = ({ initialSearch = '' }) => {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [localSearch, setLocalSearch] = useState(initialSearch);
+  
+  // Initialize with whatever is in the URL
+  const [localSearch, setLocalSearch] = useState(() => {
+    const searchParam = searchParams.get('search');
+    return searchParam || initialSearch;
+  });
+  
+  // Effect to sync the local state with URL changes
+  useEffect(() => {
+    const searchParam = searchParams.get('search');
+    if (searchParam !== localSearch && searchParam !== null) {
+      setLocalSearch(searchParam);
+    }
+  }, [searchParams, localSearch]);
   
   const debouncedSearch = useDebounce(localSearch, 500);
   
   useEffect(() => {
-    if (debouncedSearch !== initialSearch) {
+    if (debouncedSearch !== searchParams.get('search')) {
       // Create new URLSearchParams object from current
       const params = new URLSearchParams(searchParams.toString());
       
@@ -51,10 +64,10 @@ export const SearchBar: React.FC<SearchBarProps> = ({ initialSearch = '' }) => {
       // Reset page when search changes
       params.delete('page');
       
-      // Update URL with new params
-      router.push(`${pathname}?${params.toString()}`);
+      // Update URL with new params - using replace to avoid building up history
+      router.replace(`${pathname}?${params.toString()}`);
     }
-  }, [debouncedSearch, router, pathname, searchParams, initialSearch]);
+  }, [debouncedSearch, router, pathname, searchParams]);
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setLocalSearch(e.target.value);

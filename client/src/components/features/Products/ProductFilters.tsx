@@ -1,7 +1,7 @@
 // src/components/features/Products/ProductFilters.tsx
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Box, 
   Popover,
@@ -52,11 +52,41 @@ export const ProductFilters: React.FC<ProductFiltersProps> = ({
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
   const open = Boolean(anchorEl);
   
-  const [category, setCategory] = useState<ProductCategory | ''>(initialCategory);
-  const [priceRange, setPriceRange] = useState<[number, number]>([
-    initialMinPrice !== undefined ? initialMinPrice : 0,
-    initialMaxPrice !== undefined ? initialMaxPrice : 500
-  ]);
+  // Initialize state from URL params or props
+  const [category, setCategory] = useState<ProductCategory | ''>(() => {
+    const categoryParam = searchParams.get('category') as ProductCategory | null;
+    return categoryParam || initialCategory;
+  });
+  
+  const [priceRange, setPriceRange] = useState<[number, number]>(() => {
+    const minPriceParam = searchParams.get('minPrice');
+    const maxPriceParam = searchParams.get('maxPrice');
+    return [
+      minPriceParam ? parseInt(minPriceParam) : (initialMinPrice !== undefined ? initialMinPrice : 0),
+      maxPriceParam ? parseInt(maxPriceParam) : (initialMaxPrice !== undefined ? initialMaxPrice : 500)
+    ];
+  });
+  
+  // Sync state with URL when URL changes
+  useEffect(() => {
+    const categoryParam = searchParams.get('category') as ProductCategory | null;
+    if (categoryParam !== category && categoryParam !== null) {
+      setCategory(categoryParam);
+    }
+    
+    const minPriceParam = searchParams.get('minPrice');
+    const maxPriceParam = searchParams.get('maxPrice');
+    
+    if (
+      (minPriceParam && parseInt(minPriceParam) !== priceRange[0]) || 
+      (maxPriceParam && parseInt(maxPriceParam) !== priceRange[1])
+    ) {
+      setPriceRange([
+        minPriceParam ? parseInt(minPriceParam) : 0,
+        maxPriceParam ? parseInt(maxPriceParam) : 500
+      ]);
+    }
+  }, [searchParams, category, priceRange]);
   
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
@@ -102,8 +132,8 @@ export const ProductFilters: React.FC<ProductFiltersProps> = ({
     // Reset page when filters change
     params.delete('page');
     
-    // Update URL with new params
-    router.push(`${pathname}?${params.toString()}`);
+    // Update URL with new params, using replace to avoid building history
+    router.replace(`${pathname}?${params.toString()}`);
     
     // Close popover
     handleClose();
@@ -122,7 +152,7 @@ export const ProductFilters: React.FC<ProductFiltersProps> = ({
     }
     
     // Update URL with new params
-    router.push(`${pathname}${params.toString() ? `?${params.toString()}` : ''}`);
+    router.replace(`${pathname}${params.toString() ? `?${params.toString()}` : ''}`);
     
     // Close popover
     handleClose();
