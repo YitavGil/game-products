@@ -7,8 +7,6 @@ import {
   Button, 
   IconButton, 
   Box, 
-  Menu, 
-  MenuItem, 
   Badge,
   useMediaQuery,
   useTheme,
@@ -29,9 +27,8 @@ import {
   Home as HomeIcon,
   Close as CloseIcon
 } from '@mui/icons-material';
-import Link from 'next/link';
 import { styled, alpha } from '@mui/material/styles';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
 const StyledAppBar = styled(AppBar)(({ theme }) => ({
   backgroundColor: 'rgba(11, 17, 32, 0.85)',
@@ -155,6 +152,8 @@ export default function Navbar() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const router = useRouter();
   const [scrolled, setScrolled] = useState(false);
   
   useEffect(() => {
@@ -175,10 +174,22 @@ export default function Navbar() {
   
   const isActive = (path: string) => {
     if (path === '/') {
-      return pathname === '/';
+      return pathname === '/' && !searchParams.get('category');
     }
-    // For category pages, check if URL contains the category
-    return pathname.includes(path);
+    // For category URLs
+    if (path.includes('category=')) {
+      const category = path.split('=')[1];
+      return searchParams.get('category') === category;
+    }
+    return false;
+  };
+  
+  const handleNavigation = (path: string, e: React.MouseEvent) => {
+    e.preventDefault(); // Prevent default link behavior
+    router.push(path);
+    if (mobileOpen) {
+      setMobileOpen(false); // Close drawer if open
+    }
   };
   
   const drawer = (
@@ -194,7 +205,7 @@ export default function Navbar() {
       </DrawerHeader>
       <DrawerList>
         <DrawerListItem active={isActive('/')}>
-          <ListItemButton component={Link} href="/" onClick={handleDrawerToggle}>
+          <ListItemButton onClick={(e) => handleNavigation('/', e)}>
             <ListItemIcon>
               <HomeIcon />
             </ListItemIcon>
@@ -202,7 +213,7 @@ export default function Navbar() {
           </ListItemButton>
         </DrawerListItem>
         <DrawerListItem active={isActive('/?category=game')}>
-          <ListItemButton component={Link} href="/?category=game" onClick={handleDrawerToggle}>
+          <ListItemButton onClick={(e) => handleNavigation('/?category=game', e)}>
             <ListItemIcon>
               <GamesIcon />
             </ListItemIcon>
@@ -210,7 +221,7 @@ export default function Navbar() {
           </ListItemButton>
         </DrawerListItem>
         <DrawerListItem active={isActive('/?category=hardware')}>
-          <ListItemButton component={Link} href="/?category=hardware" onClick={handleDrawerToggle}>
+          <ListItemButton onClick={(e) => handleNavigation('/?category=hardware', e)}>
             <ListItemIcon>
               <HardwareIcon />
             </ListItemIcon>
@@ -218,7 +229,7 @@ export default function Navbar() {
           </ListItemButton>
         </DrawerListItem>
         <DrawerListItem active={isActive('/?category=merchandise')}>
-          <ListItemButton component={Link} href="/?category=merchandise" onClick={handleDrawerToggle}>
+          <ListItemButton onClick={(e) => handleNavigation('/?category=merchandise', e)}>
             <ListItemIcon>
               <MerchandiseIcon />
             </ListItemIcon>
@@ -260,11 +271,13 @@ export default function Navbar() {
             <LogoText
               variant="h6"
               noWrap
-              component={Link}
+              component="a"
               href="/"
+              onClick={(e) => handleNavigation('/', e)}
               sx={{
                 display: { xs: 'flex' },
-                fontSize: { xs: '1.2rem', md: '1.5rem' }
+                fontSize: { xs: '1.2rem', md: '1.5rem' },
+                cursor: 'pointer'
               }}
             >
               GAME STORE
@@ -274,16 +287,28 @@ export default function Navbar() {
           {/* Desktop Navigation Links */}
           {!isMobile && (
             <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center' }}>
-              <NavButton active={isActive('/')} component={Link} href="/">
+              <NavButton 
+                active={isActive('/')} 
+                onClick={(e) => handleNavigation('/', e)}
+              >
                 Home
               </NavButton>
-              <NavButton active={isActive('/?category=game')} component={Link} href="/?category=game">
+              <NavButton 
+                active={isActive('/?category=game')} 
+                onClick={(e) => handleNavigation('/?category=game', e)}
+              >
                 Games
               </NavButton>
-              <NavButton active={isActive('/?category=hardware')} component={Link} href="/?category=hardware">
+              <NavButton 
+                active={isActive('/?category=hardware')} 
+                onClick={(e) => handleNavigation('/?category=hardware', e)}
+              >
                 Hardware
               </NavButton>
-              <NavButton active={isActive('/?category=merchandise')} component={Link} href="/?category=merchandise">
+              <NavButton 
+                active={isActive('/?category=merchandise')} 
+                onClick={(e) => handleNavigation('/?category=merchandise', e)}
+              >
                 Merchandise
               </NavButton>
             </Box>
@@ -291,7 +316,12 @@ export default function Navbar() {
 
           {/* Shopping Cart */}
           <Box sx={{ flexGrow: isMobile ? 1 : 0, display: 'flex', justifyContent: 'flex-end' }}>
-            <CartButton component={Link} href="/cart" color="inherit">
+            <CartButton
+              aria-label="shopping cart"
+              onClick={(e) => handleNavigation('/cart', e)}
+              color="inherit"
+              disabled
+            >
               <CartBadge badgeContent={0} color="primary">
                 <CartIcon />
               </CartBadge>

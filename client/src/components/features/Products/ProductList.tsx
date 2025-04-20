@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Typography, Alert, Box } from '@mui/material';
 import Grid from '@mui/material/Grid';
 import { useQuery } from '@tanstack/react-query';
@@ -8,7 +8,7 @@ import { productApi } from '@/lib/api';
 import { ProductCard } from './ProductCard';
 import { Product, PaginatedResponse } from '@/types';
 import { Button } from '@/components/common';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 
 interface ProductListProps {
   initialProducts: PaginatedResponse<Product>;
@@ -18,28 +18,36 @@ interface ProductListProps {
 export const ProductList: React.FC<ProductListProps> = ({ initialProducts, currentPage }) => {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const pathname = usePathname();
   
   // Client-side pagination state
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   
+  // Create a URLSearchParams object for our query key
+  const buildQueryKey = () => {
+    const params: Record<string, string> = {};
+    searchParams.forEach((value, key) => {
+      params[key] = value;
+    });
+    return params;
+  };
+
+  const queryParams = buildQueryKey();
+  
   const { 
     data = initialProducts, 
     isError, 
-    error
+    error,
+    refetch
   } = useQuery<PaginatedResponse<Product>, Error>({
-    queryKey: ['products', { page: currentPage }],
+    queryKey: ['products', queryParams],
     queryFn: () => {
-      // Convert searchParams to object
-      const params: Record<string, string> = {};
-      searchParams.forEach((value, key) => {
-        params[key] = value;
-      });
-      
+      // Convert searchParams to object for API call
       return productApi.getProducts({
-        search: params.search,
-        category: params.category,
-        minPrice: params.minPrice ? parseInt(params.minPrice) : undefined,
-        maxPrice: params.maxPrice ? parseInt(params.maxPrice) : undefined,
+        search: queryParams.search,
+        category: queryParams.category,
+        minPrice: queryParams.minPrice ? parseInt(queryParams.minPrice) : undefined,
+        maxPrice: queryParams.maxPrice ? parseInt(queryParams.maxPrice) : undefined,
         page: currentPage,
         limit: 12
       });
@@ -48,6 +56,11 @@ export const ProductList: React.FC<ProductListProps> = ({ initialProducts, curre
     staleTime: 1000 * 60, // 1 minute
     refetchOnWindowFocus: false,
   });
+  
+  // React to URL parameter changes
+  useEffect(() => {
+    refetch();
+  }, [searchParams, refetch]);
   
   const handleLoadMore = async () => {
     if (data && currentPage < data.totalPages && !isLoadingMore) {
@@ -58,7 +71,7 @@ export const ProductList: React.FC<ProductListProps> = ({ initialProducts, curre
       newParams.set('page', (currentPage + 1).toString());
       
       // Navigate to next page
-      router.push(`/?${newParams.toString()}`);
+      router.push(`${pathname}?${newParams.toString()}`);
       
       setIsLoadingMore(false);
     }
