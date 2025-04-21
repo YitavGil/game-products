@@ -15,6 +15,7 @@ const SearchPaper = styled(Paper)(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
   width: '100%',
+  height: '82%',
   backgroundColor: theme.palette.background.paper,
   border: '1px solid rgba(255, 255, 255, 0.1)',
   transition: 'all 0.3s ease',
